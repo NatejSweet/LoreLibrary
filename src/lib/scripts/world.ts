@@ -9,14 +9,22 @@ import { browser } from '$app/environment';
 import { PUBLIC_API_URL } from '$env/static/public';
 import { routerItems } from "$lib/state/routerState.svelte";
 import {RouterItem} from "$lib/types/routerItem";
-
-function getWorldId() {
-  if (!browser) {
-    // Return a default or throw an error if this function is called during SSR
-    return null;
-  }
-  const worldId = window.location.pathname.split('/')[1];
-  return worldId;
+import {token} from "$lib/state/userState.svelte";
+        
+export function getWorlds() {
+    return fetch(`${PUBLIC_API_URL}/worlds`)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+            let worlds = data.map((world: any) => {
+                return  World.fromJson(world); // this will need to be updated later
+            }
+            );
+            return worlds;
+        }).catch((error) => {
+            console.error("Error fetching worlds:", error); // Log any errors
+            return []; // Return an empty array in case of error
+        });
 }
 
 export function getWorld(worldId: string) { 
@@ -42,20 +50,22 @@ export function getWorld(worldId: string) {
         });
 }
 
-export function getWorlds() {
-    return fetch(`${PUBLIC_API_URL}/worlds`)
-        .then((response) => response.json())
-        .then((data) => {
-            console.log(data);
-            let worlds = data.map((world: any) => {
-                return  World.fromJson(world); // this will need to be updated later
-            }
-            );
-            return worlds;
-        }).catch((error) => {
-            console.error("Error fetching worlds:", error); // Log any errors
-            return []; // Return an empty array in case of error
-        });
+export function updateWorld() {
+    const world = get(worldContext);
+    if (!world) {
+        return;
+    }
+    return fetch(`${PUBLIC_API_URL}/${world.id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${get(token)}` // Add the token to the headers
+        },
+        body: JSON.stringify({ id: world.id, content: world.content })
+    })
+    .then((response) => {
+        console.log(response);
+    });
 }
 
 
@@ -82,6 +92,29 @@ export function getCollection(worldId: string, collectionId: string) {
             console.error("Error fetching world:", error); // Log any errors
             return;
         });
+}
+
+export function updateCollection(id : string){
+    const collections = get(collectionsContext);
+    if (!collections) {
+        return;
+    }
+    const collection = collections.find((collection: Collection) => collection.id === id);
+    if (!collection) {
+        return;
+    }
+    return fetch(`${PUBLIC_API_URL}/${collection.parentId}/${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${get(token)}` // Add the token to the headers
+        },
+        body: JSON.stringify({ worldId: collection.parentId, id: collection.id, content: collection.content })
+    })
+    .then((response) => {
+        console.log(response);
+    });
+
 }
 
 export async function getEntry(worldId: string, collectionId: string, entryId: string) {
@@ -119,3 +152,24 @@ export async function getEntry(worldId: string, collectionId: string, entryId: s
 
 }  
         
+export async function updateEntry() {
+    const entry = get(entryContext);
+    if (!entry){
+        return
+    }
+    let currentUrl = window.location.pathname.split('/');
+    const worldId = currentUrl[1];
+    return fetch(`${PUBLIC_API_URL}/${worldId}/${entry.parentId}/${entry.id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${get(token)}` // Add the token to the headers
+        },
+        body: JSON.stringify({ worldId: worldId, collectionId: entry.parentId, id: entry.id, content: entry.content })
+    })
+    .then((response) => {
+        console.log(response);
+    });
+
+
+}
