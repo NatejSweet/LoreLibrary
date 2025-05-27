@@ -65,6 +65,7 @@ export function updateWorld() {
     })
     .then((response) => {
         console.log(response);
+        response.json().then(data => console.log(data.message));
     });
 }
 

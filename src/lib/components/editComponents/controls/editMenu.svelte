@@ -14,9 +14,7 @@
     import { fade } from "svelte/transition";
     import { showStyleControls, editContent, editComponentContents } from "$lib/state/editState.svelte";
     import {world, collections, entry} from "$lib/state/worldState.svelte";
-    import type { World } from "$lib/types/world";
-    import type { Collection } from "$lib/types/collection";
-    import type { Entry } from "$lib/types/entry";
+    import { updateWorld, updateCollection, updateEntry } from "$lib/scripts/world"
     
     // State
     let open = $state(false);
@@ -86,7 +84,7 @@ function cleanContents() { //bullet and number lists are assigned ids while edit
             if (updatedWorld) {
                 updatedWorld.content = $editComponentContents;
                 world.set(updatedWorld);
-                // updateWorld();
+                updateWorld();
             }
             case 3: 
             //collection
@@ -97,7 +95,7 @@ function cleanContents() { //bullet and number lists are assigned ids while edit
                     c.id === collectionId ? { ...c, content: $editComponentContents } : c
                 );
                 collections.set(updatedCollections || []);
-                // updateCollection(collectionId);
+                updateCollection(collectionId);
             }
             case 4: 
             //entry
@@ -106,7 +104,7 @@ function cleanContents() { //bullet and number lists are assigned ids while edit
             if (updatedEntry) {
                 updatedEntry.content = $editComponentContents;
                 entry.set(updatedEntry);
-                // updateEntry();
+                updateEntry();
             }
         }
         editComponentContents.set([]);
