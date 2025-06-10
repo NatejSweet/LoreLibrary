@@ -1,4 +1,3 @@
-import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
 import { RouterItem } from "../types/routerItem";
 import { get } from "svelte/store";
 export function updateRouterStateFromPath(path: string) : RouterItem[]{
