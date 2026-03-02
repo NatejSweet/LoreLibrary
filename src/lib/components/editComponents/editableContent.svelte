@@ -103,8 +103,8 @@
 </script>
 <div class="w-[75%] flex flex-col mx-0">
   <AddComponentButton index={0} />
-  {console.log($editComponentContents)}
   {#each $editComponentContents as item, index }
+  {console.log(item)}
     <div
       role="listitem"
       class="flex flex-col w-full h-full editor-row"
@@ -121,7 +121,8 @@
       {:else if item.html !== undefined}
         <HtmlEditor content={item.html} index={index} />
       {:else if item.text !== undefined}   
-        <RawTextEditor content={item.text} index={index} />
+        <!-- <RawTextEditor content={item.text} styling={item.style || {}} index={index} /> -->
+         <RawTextEditor content={item.text} index={index} />
       {:else if item.image_url !== undefined}
         <ImageEditor content={item.image_url} index={index} />
       {:else}
