@@ -50,7 +50,7 @@
             <ComponentControls index={index} type="img" />
         </div>
     </div>
-    <div class="flex mt-4">
+    <div class="flex">
     <img src={content} alt="Image preview"  class={c} style={s}/>
     </div>
 </div>
