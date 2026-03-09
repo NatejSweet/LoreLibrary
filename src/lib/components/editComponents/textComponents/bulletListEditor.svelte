@@ -19,38 +19,65 @@
 		});
 	}
 
-	const addItem = () => {
-		items = [...items, { id: crypto.randomUUID(), text: '', subItems: [] }];
-		syncToStore();
-	};
+	function findItemById(items: any[], id: string): any | null {
+		for (const item of items) {
+			if (item.id === id) {
+				return item;
+			}
+			if (item.subItems) {
+				const found = findItemById(item.subItems, id);
+				if (found) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
 
-	const removeItem = (item: { id: string }) => {
-		items = items.filter((bullet) => bullet.id !== item.id);
-		syncToStore();
-	};
-
-	function addSubBullet(parent: { subItems?: any[] }) {
-		parent.subItems = parent.subItems || [];
-		parent.subItems.push({ id: crypto.randomUUID(), text: '', subItems: [] });
-		items = [...items];
+	function addNewBullet(parentId: string, index: number) {//if the current item has sub items, steal them for the new item
+		const newBullet = { id: crypto.randomUUID(), text: "", subItems: [] };
+		const parentItem = findItemById(items, parentId);
+		if (parentItem) {
+			if (parentItem.subItems.length === 0) {
+				parentItem.subItems.push(newBullet);
+			} else {
+				console.log("adding new bullet to parent", parentItem);
+				let subItems = parentItem.subItems;//copy sub items
+				newBullet.subItems = parentItem.subItems[index]?.subItems || []; //grap predecessors sub items
+				parentItem.subItems[index].subItems = [];//empty predecessors sub items
+				subItems.splice(index + 1, 0, newBullet);//add new bullet as a sibling right after the current item
+				parentItem.subItems = subItems;//update parent item sub items
+			}
+			syncToStore();	
+		}
+		setTimeout(() => {//focus on new item
+                            const nextInput = document.querySelector(`input[data-id="${newBullet.id}"]`) as HTMLInputElement;
+                            if (nextInput) {
+                                nextInput.focus();
+                            }
+        }, 0);
+	}
+	function changeToSubBullet(index: number) {
+		if (index === 0) return;//can't indent if there is no previous sibling
+		const previousSibling = items[index - 1];
+		const currentItem = items[index];
+		if (!previousSibling.subItems) {
+			previousSibling.subItems = [];
+		}
+		previousSibling.subItems.push(currentItem);
+		items.splice(index, 1);
 		syncToStore();
 	}
 
-	function removeSubBullet(parent: { subItems?: any[] }, subId: string) {
-		if (parent.subItems) {
-			parent.subItems = parent.subItems.filter((b) => b.id !== subId);
-			items = [...items];
-			syncToStore();
+	function updateItem(updatedItem: { id: string; text: string; subItems?: any[] }) {
+		const item = findItemById(items, updatedItem.id);
+		if (item) {
+			item.text = updatedItem.text;
+			item.subItems = updatedItem.subItems;
+			syncToStore();	
 		}
 	}
 
-	const updateItem = (idx: number, updatedItem: { id: string; text: string; subItems?: any[] }) => {
-		items[idx] = updatedItem;
-		items = [...items];
-		syncToStore();
-	};
-
-	
     $: styling = $editComponentContents[index]?.style ?? {border: {color: ["surface", true, "500"], padding: "2px", margin: "2px", rounding: "Slight"}, text: {align: "left"}};
     $: c = getClass(styling);
     $: s = getStyle(styling);
@@ -69,18 +96,18 @@
     style={s}
   >
 		<div>
-			<ul class='list-disc pl-[2.5%]' style={"font-size: 0;"}>
-				{#each items as bullet, i (bullet.id)}<BulletItem
-					item={bullet}
-					{addSubBullet}
-					{removeSubBullet}
-					removeItem={removeItem}
-					updateItem={(updatedItem) => updateItem(i, updatedItem)}
-				/>
+			<ul class="list-disc pl-[2.5%]">
+				{#each items as bullet, i (bullet.id)}
+				{console.log("rendering bullet", bullet)}
+					<BulletItem
+						item={bullet}
+						index={i}
+						updateItem={updateItem}
+						addNewBullet={addNewBullet}
+					/>
 				{/each}
-			</ul>
-		<button on:click={addItem} class="btn preset-tonal-primary button-filled max-w-40 ml-4 my-2">Add Item</button>
-        		</div>
+			</ul> 
+		</div>
 		<ComponentControls index={index} type="bl" />
     </div>
 </div>
