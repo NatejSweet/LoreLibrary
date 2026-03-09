@@ -17,13 +17,13 @@
     };
 </script>
 
-<li class="my-4 gap-2 text-surface">
+<li class="my-4 text-surface">
     <div class="flex items-center gap-2">
         <input
             type="text"
             value={item.text}
             on:input={handleInput}
-            class="input input-ghost w-full text-surface bg-surface border-primary-200 border-2 max-w-[15%]"
+            class="input input-ghost text-surface bg-surface border-primary-200 border-2 max-w-[15%]"
             placeholder="Enter text"
         />
         <button on:click={() => addSubBullet(item)} class="btn btn-primary preset-tonal-primary">
@@ -33,9 +33,8 @@
             Remove
         </button>
     </div>
-
     {#if item.subItems?.length}
-        <ul class="list-disc pl-6 border-l border-muted ml-2">
+        <ul class="list-disc pl-6 ml-2 flex" style="font-size: 0;">
             {#each item.subItems as subBullet (subBullet.id)}
                 <BulletItem
                     item={subBullet}
@@ -46,7 +45,7 @@
                         subBullet.text = updatedSub.text;
                         updateItem({ ...item, subItems: [...(item.subItems || [])] });
                     }}
-                />
+                />{@html ''}
             {/each}
         </ul>
     {/if}

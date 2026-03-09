@@ -81,7 +81,7 @@
                 class={`text-left px-3 py-2 rounded-md transition-colors
                     hover:bg-surface-50 hover:text-primary-contrast-50
                     focus:outline-none focus:bg-surface-50
-                    ${selectedCategory === category ? 'bg-surface-50 text-primary-surface-contrast-100 font-medium' : 'text-surface-contrast-500'}`}
+                    ${selectedCategory === category ? 'bg-surface-50 text-surface-contrast-50 font-medium' : 'text-surface-contrast-500'}`}
                 onclick={() => selectCategory(category as keyof typeof menuOptions)}
             >
                 {category}
@@ -114,7 +114,7 @@
                     class={`text-left px-3 py-2 rounded-md transition-colors
                     hover:bg-surface-50 hover:text-primary-contrast-50
                     focus:outline-none focus:bg-surface-50
-                    ${ selectedSubCategory === i ? 'bg-surface-50 text-primary-surface-contrast-100 font-medium' : 'text-surface-contrast-500'}`}
+                    ${ selectedSubCategory === i ? 'bg-surface-50 text-surface-contrast-50 font-medium' : 'text-surface-contrast-500'}`}
                     onclick={() => selectSubCategory(i)}
                     >
                     {Object.keys(option)[0]}
@@ -134,7 +134,7 @@
                         class={`text-left px-3 py-2 rounded-md transition-colors
                     hover:bg-surface-50 hover:text-primary-contrast-50
                     focus:outline-none focus:bg-surface-50
-                    ${ selectedOption == val ? 'bg-surface-50 text-primary-surface-contrast-100 font-medium' : 'text-surface-contrast-500'}`}
+                    ${ selectedOption == val ? 'bg-surface-50 text-surface-contrast-50 font-medium' : 'text-surface-contrast-500'}`}
                         onclick={() => handleOptionSelect(key, val)}
                         >
                         {val}
