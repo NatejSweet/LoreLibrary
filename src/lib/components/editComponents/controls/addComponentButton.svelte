@@ -32,7 +32,7 @@
 <button
     on:click={(event) => { event.stopPropagation(); openMenu(event); }}
     type="button"
-    class="btn-icon variant-filled preset-tonal-primary w-full box-border mb-2 mt-2"
+    class="btn-icon preset-tonal-primary w-full box-border mb-2 mt-2"
 >
     <Plus />
 </button>

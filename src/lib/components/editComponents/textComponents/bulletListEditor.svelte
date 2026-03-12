@@ -1,81 +1,120 @@
 <script lang="ts">
-    import BulletItem from './bulletItem.svelte';
     import { editComponentContents } from '$lib/state/editState.svelte';
 	import ComponentControls from '../controls/componentControls.svelte';
     import MoveComponentButtons from '../controls/moveComponentButtons.svelte';
 	import {getClass, getStyle} from "$lib/scripts/componentStyling";
+	import { tick } from 'svelte';
 
-    export let items: { id: string; text: string; subItems?: any[] }[] = [];
+    export let bullets: Bullet[] = [];
     export let index: number;
 	export let onDragStart: (index: number) => void = () => {};
     export let onDrop: (index: number) => void = () => {};
-	
-     function syncToStore() {
+
+	let focusId: string | null = null;
+	let inputs: Record<string, HTMLInputElement> = {};
+	type Bullet = {
+		id: string
+		text: string
+		depth: number
+	}
+
+    function syncToStore() {
 		editComponentContents.update((contents) => {
 			const next = [...contents];
 			const existing = next[index] ?? {};
-			next[index] = { ...existing, bulletList: items };
+			next[index] = { ...existing, bulletList: bullets };
 			return next;
 		});
 	}
 
-	function findItemById(items: any[], id: string): any | null {
-		for (const item of items) {
-			if (item.id === id) {
-				return item;
-			}
-			if (item.subItems) {
-				const found = findItemById(item.subItems, id);
-				if (found) {
-					return found;
+	function focusBullet(index: number, cursorPos?: number) {
+		const bullet = bullets[index];
+		if (!bullet) return;
+
+		const el = inputs[bullet.id];
+		if (!el) return;
+
+		el.focus();
+
+		if (cursorPos !== undefined) {
+			const pos = Math.min(cursorPos, el.value.length);
+			el.setSelectionRange(pos, pos);
+		}
+	}
+
+	async function addBullet(index: number) {
+		const newBullet = {
+			id: crypto.randomUUID(),
+			text: "",
+			depth: bullets[index].depth
+		};
+
+		bullets.splice(index + 1, 0, newBullet);
+		bullets = bullets;
+
+		let focusId = newBullet.id;
+
+		await tick();
+
+		inputs[focusId]?.focus();
+	}
+
+	function indentBullet(index: number) {
+		if (index === 0) return;
+
+		bullets[index].depth += 1;
+		bullets = bullets;
+	}
+
+	function outdentBullet(index: number) {
+		bullets[index].depth = Math.max(0, bullets[index].depth - 1);
+		bullets = bullets;
+	}
+
+	function handleKey(e: KeyboardEvent, index: number) {
+		const input = e.target as HTMLInputElement;
+		const cursor = input.selectionStart ?? 0;
+
+		switch (e.key) {
+			case "Enter":
+				e.preventDefault();
+				addBullet(index);
+				break;
+			case "Tab":
+				e.preventDefault();
+				if (e.shiftKey) {
+					outdentBullet(index);
+				} else {
+					indentBullet(index);
 				}
-			}
+				break;
+			case "Backspace":
+				if (cursor === 0) {
+					e.preventDefault();
+					if (bullets[index].text === "") {
+						bullets.splice(index, 1);
+						bullets = bullets;
+						focusBullet(index - 1);
+					} else {
+						outdentBullet(index);
+						focusBullet(index, cursor);
+					}
+				}
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				focusBullet(index - 1, cursor);
+				break;
+			case "ArrowDown":
+				e.preventDefault();
+				focusBullet(index + 1, cursor);
+				break;
 		}
-		return null;
 	}
 
-	function addNewBullet(parentId: string, index: number) {//if the current item has sub items, steal them for the new item
-		const newBullet = { id: crypto.randomUUID(), text: "", subItems: [] };
-		const parentItem = findItemById(items, parentId);
-		if (parentItem) {
-			if (parentItem.subItems.length === 0) {
-				parentItem.subItems.push(newBullet);
-			} else {
-				console.log("adding new bullet to parent", parentItem);
-				let subItems = parentItem.subItems;//copy sub items
-				newBullet.subItems = parentItem.subItems[index]?.subItems || []; //grap predecessors sub items
-				parentItem.subItems[index].subItems = [];//empty predecessors sub items
-				subItems.splice(index + 1, 0, newBullet);//add new bullet as a sibling right after the current item
-				parentItem.subItems = subItems;//update parent item sub items
-			}
-			syncToStore();	
-		}
-		setTimeout(() => {//focus on new item
-                            const nextInput = document.querySelector(`input[data-id="${newBullet.id}"]`) as HTMLInputElement;
-                            if (nextInput) {
-                                nextInput.focus();
-                            }
-        }, 0);
-	}
-	function changeToSubBullet(index: number) {
-		if (index === 0) return;//can't indent if there is no previous sibling
-		const previousSibling = items[index - 1];
-		const currentItem = items[index];
-		if (!previousSibling.subItems) {
-			previousSibling.subItems = [];
-		}
-		previousSibling.subItems.push(currentItem);
-		items.splice(index, 1);
-		syncToStore();
-	}
-
-	function updateItem(updatedItem: { id: string; text: string; subItems?: any[] }) {
-		const item = findItemById(items, updatedItem.id);
-		if (item) {
-			item.text = updatedItem.text;
-			item.subItems = updatedItem.subItems;
-			syncToStore();	
-		}
+	function updateText(index: number, e: Event) {
+		bullets[index].text = (e.target as HTMLInputElement).value;
+		bullets = bullets;
 	}
 
     $: styling = $editComponentContents[index]?.style ?? {border: {color: ["surface", true, "500"], padding: "2px", margin: "2px", rounding: "Slight"}, text: {align: "left"}};
@@ -96,17 +135,20 @@
     style={s}
   >
 		<div>
-			<ul class="list-disc pl-[2.5%]">
-				{#each items as bullet, i (bullet.id)}
-				{console.log("rendering bullet", bullet)}
-					<BulletItem
-						item={bullet}
-						index={i}
-						updateItem={updateItem}
-						addNewBullet={addNewBullet}
-					/>
+			<ul class="list-disc ml-5">
+				{#each bullets as bullet, i (bullet.id)}
+					<li class="" style="margin-left:{bullet.depth * 20}px; max-width: calc(100% - {bullet.depth * 20}px)}">
+						<input
+							bind:this={inputs[bullet.id]}
+							value={bullet.text}
+							on:input={(e) => updateText(i, e)}
+							on:keydown={(e) => handleKey(e, i)}
+							size={Math.max(1, bullet.text.length)}
+							class="w-full max-w-full"
+						/>
+					</li>
 				{/each}
-			</ul> 
+				</ul>
 		</div>
 		<ComponentControls index={index} type="bl" />
     </div>

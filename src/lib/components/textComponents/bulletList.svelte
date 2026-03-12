@@ -1,11 +1,11 @@
 <script lang="ts">
     import BulletList from '$lib/components/textComponents/bulletList.svelte';
     import {getClass, getStyle, loadFont} from "$lib/scripts/componentStyling";
-    export let items: { text: string; subItems?: any[] }[] = [];
+    export let items: { text: string; depth: number }[] = [];
     export let style: Record<string, any> | undefined = undefined;
 
     
-        $: if (style?.text?.["font variant"]) {
+    $: if (style?.text?.["font variant"]) {
         loadFont(style.text["font variant"]);
     }
 
@@ -63,12 +63,8 @@
     <div class={cAlignment + " w-fit"}>
         <ul class="list-disc pl-6 list-inside">
             {#each items as item}
-            <li class={getFontSize() + ` ${style?.text?.font ? 'font-' + style.text.font : ''}`}>
+            <li class={getFontSize() + ` ${style?.text?.font ? 'font-' + style.text.font : ''}`} style="margin-left:{item.depth * 20}px">
                 {item.text}
-        
-                {#if item.subItems?.length}
-                <BulletList items={item.subItems} style={passDownStyle(style)} />
-                {/if}
             </li>
             {/each}
         </ul>

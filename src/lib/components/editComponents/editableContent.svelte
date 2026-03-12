@@ -13,55 +13,35 @@
 
     export let content: Content;
 
-    type EditableBullet = {
+    type EditableLi = {
 		text: string;
 		id: string;
-		subItems?: EditableBullet[];
+		depth: number;
 	};
 
-	type EditableNumber = {
-		text: string;
-		id: string;
-		subItems?: EditableNumber[];
-	};
-
-    function convertToEditableBulletList(bulletList: { text: string; subBullets?: any[] }[]): EditableBullet[] {
+    function convertToEditableList(list: { text: string; depth: number }[]): EditableLi[] {
         let idCounter = 0;
 
-        function createEditableBullet(item: { text: string; subItems?: any[] }): EditableBullet {
-            const editableBullet: EditableBullet = {
+        function createEditableItem(item: { text: string; depth: number }): EditableLi {
+            const editableBullet: EditableLi = {
                 text: item.text,
                 id: (idCounter++).toString(),
-                subItems: item.subItems ? item.subItems.map(createEditableBullet) : undefined
+                depth: item.depth || 0,
             };
             return editableBullet;
         }
 
-        return bulletList.map(createEditableBullet);
+        return list.map(createEditableItem);
     }
-
-	function convertToEditableNumberList(numberList: {text: string; subItems?: any[]}[]): EditableNumber[] {
-		let idCounter = 0;
-
-		function createEditableNumber(item: { text: string; subItems?: any[] }): EditableNumber {
-			const editableNumber: EditableNumber = {
-				text: item.text,
-				id: (idCounter++).toString(),
-				subItems: item.subItems ? item.subItems.map(createEditableNumber) : undefined
-			};
-			return editableNumber;
-		}
-		return numberList.map(createEditableNumber);
-	}
 
     function convertContentToEditableContent(content: Content): Content {
         let editableContent = content.map((item: any) => {
             let id = crypto.randomUUID();
             if (item.bulletList) {
               console.log(item.style);
-                return { id: id, bulletList: convertToEditableBulletList(item.bulletList), style: item.style || undefined };
+                return { id: id, bulletList: convertToEditableList(item.bulletList), style: item.style || undefined };
             } else if (item.numberedList) {
-                return { id: id, numberedList: convertToEditableNumberList(item.numberedList), style: item.style || undefined };
+                return { id: id, numberedList: convertToEditableList(item.numberedList), style: item.style || undefined };
             } else {
                 return {...item, id: id,};
             }
@@ -113,7 +93,7 @@
       on:drop={() => onDrop(index)}
     >
       {#if item.bulletList != undefined} 
-        <BulletListEditor items={item.bulletList} index={index} />
+        <BulletListEditor bullets={item.bulletList} index={index} />
       {:else if item.numberedList != undefined}
         <NumberListEditor items={item.numberedList} index={index} />
       {:else if item.md !== undefined}

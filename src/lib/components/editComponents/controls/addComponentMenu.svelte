@@ -30,10 +30,10 @@
                     component = { html: "" };
                     break;
                 case 'Number List':
-                    component = { numberedList: [{ text: '', id: 0, subItems: [] }] };
+                    component = { numberedList: [{ text: '', id: 0, depth: 0 }] };
                     break;
                 case 'Bullet List':
-                    component = { bulletList: [{ text: '', id: 0, subItems: [] }] };
+                    component = { bulletList: [{ text: '', id: 0, depth: 0 }] };
                     break;
                 case 'Image':
                     component = { image_url: "" };
