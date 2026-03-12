@@ -10,22 +10,13 @@
 	export let onDragStart: (index: number) => void = () => {};
     export let onDrop: (index: number) => void = () => {};
 
-	let focusId: string | null = null;
-	let inputs: Record<string, HTMLInputElement> = {};
 	type Bullet = {
 		id: string
 		text: string
 		depth: number
 	}
 
-    function syncToStore() {
-		editComponentContents.update((contents) => {
-			const next = [...contents];
-			const existing = next[index] ?? {};
-			next[index] = { ...existing, bulletList: bullets };
-			return next;
-		});
-	}
+	let inputs: Record<string, HTMLInputElement> = {};
 
 	function focusBullet(index: number, cursorPos?: number) {
 		const bullet = bullets[index];

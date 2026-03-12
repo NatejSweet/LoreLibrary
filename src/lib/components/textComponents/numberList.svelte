@@ -1,7 +1,7 @@
 <script lang="ts">
     import NumberList from '$lib/components/textComponents/numberList.svelte';
     import {getClass, getStyle, loadFont} from "$lib/scripts/componentStyling";
-    export let items: {text: String; subItems?: any[] }[] = [];
+    export let items: {text: string; depth: number }[] = [];
     export let style: Record<string, any> | undefined = undefined;
 
         $: if (style?.text?.["font variant"]) {
@@ -30,15 +30,21 @@
         style.text.align = tmp_align;//return align to preserve state, its either this or overgeneralizing getClass and getStyle
     }
 
-    const passDownStyle = (style: Record<string, any> | undefined) => {
-        if (!style) return undefined;
-        const newStyle: Record<string, any> = {};
-        if (style.text) {
-            newStyle.text = {...style.text};
+    function getNumberPrefix(index: number): string {
+        const locItems = items.map((item, i) => ({ ...item, id: crypto.randomUUID()})); // Assign temporary IDs for tracking
+        const item = locItems[index];
+        for (let i = index - 1; i >= 0; i--) {//for each previous item
+            if (locItems[i].depth < item.depth) { // if the item is less deep than the current item
+                //remove all items before
+                locItems.splice(0, i + 1);
+                break;
+            }
         }
-        console.log(newStyle);
-        return newStyle;
-    };
+		if (!item) return "";
+		const sameLevelItems = locItems.filter(i => i.depth === item.depth);
+		const position = sameLevelItems.findIndex(i => i.id === item.id);
+		return `${position + 1}.`;	
+	}
 
     const getFontSize = () => {
         if (!style || !style.text || !style.text.size) return 'text-base';
@@ -60,14 +66,13 @@
 </script>
 <div style={s} class={c + " flex flex-col"}>
     <div class={cAlignment + " w-fit"}>
-        <ol class=" list-decimal pl-6 list-inside">
-            {#each items as item}
-                <li class={getFontSize() + ` ${style?.text?.font ? 'font-' + style.text.font : ''}`}>
+        <ol class="pl-6 list-inside">
+            {#each items as item, i }
+                <li style="margin-left:{item.depth * 20}px" class={getFontSize() + ` ${style?.text?.font ? 'font-' + style.text.font : ''} flex items-center`}>
+                    <span class="mr-2 select-none">
+                    {getNumberPrefix(i)}
+                    </span>  
                     {item.text}
-
-                    {#if item.subItems?.length}
-                        <NumberList items={item.subItems} style={passDownStyle(style)} />
-                    {/if}
                 </li>
             {/each}
         </ol>
