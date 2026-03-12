@@ -60,7 +60,7 @@
                 class={`w-full text-left px-3 py-2 rounded-md transition-colors
                     hover:bg-surface-50 hover:text-primary-contrast-50
                     focus:outline-none focus:bg-surface-50
-                    ${selectedCategory === category ? 'bg-surface-100 text-primary-surface-contrast-100 font-medium' : 'text-surface-contrast-500'}`}
+                   ${selectedCategory === category ? 'bg-surface-50 text-surface-contrast-50 font-medium' : 'text-surface-contrast-500'}`}
                 on:click={() => selectCategory(category as keyof typeof menuOptions)}
             >
                 {category}
